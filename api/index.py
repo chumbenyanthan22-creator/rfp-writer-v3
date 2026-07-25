@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.')
 CORS(app)
 
 @app.route('/api/proposals/generate', methods=['POST'])
@@ -18,10 +19,20 @@ Industry: {industry}
 Language: {language}
 
 Based on your RFP:
-{rfp_content[:200] + '...' if rfp_content else 'No RFP content provided'}
+{rfp_content[:300] + '...' if rfp_content else 'No RFP content provided'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 EXECUTIVE SUMMARY:
-We are pleased to submit our proposal. Our team brings extensive expertise in {industry}.
+We are pleased to submit our proposal. Our team brings extensive expertise in {industry} with a proven track record of success.
+
+TECHNICAL APPROACH:
+Our methodology combines industry best practices with innovative solutions to deliver exceptional results.
+
+PRICING:
+Competitive pricing structure optimized for value delivery.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ✅ Ready for submission!
 """
@@ -29,16 +40,22 @@ We are pleased to submit our proposal. Our team brings extensive expertise in {i
     return jsonify({
         'success': True,
         'proposal': {
+            'id': int(os.times().elapsed * 1000),
             'content': proposal,
             'language': language,
             'industry': industry
-        }
+        },
+        'creditsRemaining': 4
     })
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    return jsonify({'message': 'RFP Writer Pro API is running!'}), 200
+# Serve HTML files
+@app.route('/')
+def serve_index():
+    return send_from_directory('.', 'index.html')
 
-# Vercel needs this
+@app.route('/app')
+def serve_app():
+    return send_from_directory('app', 'index.html')
+
+# For Vercel serverless
 app = app
